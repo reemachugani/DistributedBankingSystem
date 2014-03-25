@@ -73,7 +73,7 @@ public class Client {
 				System.out.println("Enter you account number");
 				accn = Integer.parseInt(inFromUser.readLine());
 
-				while(!isValidUserInput(name, password, accn)){
+				while (!isValidUserInput(name, password, accn)) {
 					System.out.println("Enter your name");
 					name = inFromUser.readLine();
 
@@ -97,7 +97,7 @@ public class Client {
 				System.out.println("Enter you account number");
 				accn = Integer.parseInt(inFromUser.readLine());
 
-				while(!isValidUserInput(name, password, accn)){
+				while (!isValidUserInput(name, password, accn)) {
 					System.out.println("Enter your name");
 					name = inFromUser.readLine();
 
@@ -134,7 +134,7 @@ public class Client {
 				System.out.println("Enter you account number");
 				accn = Integer.parseInt(inFromUser.readLine());
 
-				while(!isValidUserInput(name, password, accn)){
+				while (!isValidUserInput(name, password, accn)) {
 					System.out.println("Enter your name");
 					name = inFromUser.readLine();
 
@@ -157,7 +157,7 @@ public class Client {
 				System.out.println("Enter you account number");
 				accn = Integer.parseInt(inFromUser.readLine());
 
-				while(!isValidUserInput(name, password, accn)){
+				while (!isValidUserInput(name, password, accn)) {
 					System.out.println("Enter your name");
 					name = inFromUser.readLine();
 
@@ -198,14 +198,14 @@ public class Client {
 
 	public static void transferAmount(int accn, double amount, String currency,
 			int transferAccn) throws Exception {
-		
+
 		double currBalance = checkBalanceState(accn);
 
-		while(amount < 0){
-				System.out.println("Amount to be transferred cannot be negative, Please enter again");
-				amount = Double.parseDouble(inFromUser.readLine());
-		} 
-
+		while (amount < 0) {
+			System.out
+					.println("Amount to be transferred cannot be negative, Please enter again");
+			amount = Double.parseDouble(inFromUser.readLine());
+		}
 
 		if (currBalance == -1) {
 			System.out.println("Unexpected Error");
@@ -289,13 +289,12 @@ public class Client {
 		printOutputString(receive);
 		String[] returnedArr = receive.split("\\|");
 		int returnCode = Integer.parseInt(returnedArr[0]);
-		if(returnCode != 7) {
+		if (returnCode != 7) {
 			return false;
-		}
-		else{ 
+		} else {
 			return true;
 		}
-		
+
 	}
 
 	public static void createAccount(String name, String currency,
@@ -376,8 +375,8 @@ public class Client {
 
 		switch (returnCode) {
 		case 1:
-			if(monitoring)
-			System.out.println("Account " + returnedArr[1] + " created");
+			if (monitoring)
+				System.out.println("Account " + returnedArr[1] + " created");
 			break;
 
 		case 2:
@@ -395,9 +394,9 @@ public class Client {
 			break;
 
 		case 5:
-			if(monitoring){
+			if (monitoring) {
 				System.out.println("Checking Balance");
-			}	
+			}
 
 			System.out.println("Name: " + returnedArr[1]);
 			System.out.println("Account Number: " + returnedArr[2]);
@@ -405,26 +404,29 @@ public class Client {
 			break;
 
 		case 6:
-			if(monitoring){
+			if (monitoring) {
 				System.out.println("Transferring amount");
-			}	
+			}
 
-			System.out.println("Balance remaining after transfer: " + returnedArr[1]);
-			//System.out.println("Name: " + returnedArr[1]);
-			//System.out.println("Account Number: " + returnedArr[2]);
-			//System.out.println("Balance remaining after transfer: " + returnedArr[4]);
-			//System.out.println("Amount " + returnedArr[5] +  " transferred to Account no. " + returnedArr[3]);
+			System.out.println("Balance remaining after transfer: "
+					+ returnedArr[1]);
+			// System.out.println("Name: " + returnedArr[1]);
+			// System.out.println("Account Number: " + returnedArr[2]);
+			// System.out.println("Balance remaining after transfer: " +
+			// returnedArr[4]);
+			// System.out.println("Amount " + returnedArr[5] +
+			// " transferred to Account no. " + returnedArr[3]);
 			break;
 
 		case 7:
-			if(!monitoring){
+			if (!monitoring) {
 				System.out.println(returnedArr[1]);
-			}	
+			}
 			break;
 
 		default:
-			//not printing errors for monitoring condition
-			if(!monitoring){
+			// not printing errors for monitoring condition
+			if (!monitoring) {
 				System.out.println(returnedArr[1]);
 			}
 		}
