@@ -12,17 +12,25 @@ public class Account {
     int accNumber;
     Currency currency;
     char[] password;
-    double initialBalance;
+    double balance;
 
-    Account(String n, Currency c, char[] pwd, double amt, int accNum){
+    Account(String n, String c, char[] pwd, double amt, int accNum){
         name = n;
-        currency = c;
+        currency = Currency.valueOf(c);
         password = pwd;
-        initialBalance = amt;
+        balance = amt;
         accNumber = accNum;
     }
 
     public void setPwd(char[] p){
         password = p;
+    }
+
+    public double getBalance(){
+        return balance;
+    }
+
+    public void setBalance(double curBal){
+        balance = curBal;
     }
 }
