@@ -62,8 +62,9 @@ public class Client {
 				System.out.println("Enter the initial balance in your account");
 				initialBalance = getValidAmount();
 
-				while(initialBalance < 0){
-					System.out.println("Balance cannot be negative, Enter a positive value");
+				while (initialBalance < 0) {
+					System.out
+							.println("Balance cannot be negative, Enter a positive value");
 					initialBalance = getValidAmount();
 				}
 
@@ -222,7 +223,6 @@ public class Client {
 			transferAccn = Integer.parseInt(inFromUser.readLine());
 		}
 
-
 		if (currBalance == -1) {
 			System.out.println("Unexpected Error");
 			return;
@@ -230,7 +230,7 @@ public class Client {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("6|" + accn + "|" + currency + "|" + amount + "|"
-				+ currBalance + "|" + transferAccn+ "|" );
+				+ currBalance + "|" + transferAccn + "|");
 
 		System.out.println(sb.toString());
 
@@ -250,7 +250,7 @@ public class Client {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("3|" + accn + "|" + currency + "|" + amount + "|"
-				+ currBalance + "|" );
+				+ currBalance + "|");
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 		printOutputString(receive);
@@ -259,7 +259,7 @@ public class Client {
 
 	public static void closeAccount(int accn) throws Exception {
 		StringBuilder sb = new StringBuilder();
-		sb.append("2|" + accn + "|" );
+		sb.append("2|" + accn + "|");
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 		printOutputString(receive);
@@ -269,7 +269,7 @@ public class Client {
 	public static void checkBalanceUser(int accn) throws Exception {
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("5|" + accn + "|" );
+		sb.append("5|" + accn + "|");
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 		printOutputString(receive);
@@ -279,7 +279,7 @@ public class Client {
 	public static double checkBalanceState(int accn) throws Exception {
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("5|" + accn + "|" );
+		sb.append("5|" + accn + "|");
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 
@@ -300,7 +300,7 @@ public class Client {
 			int accn) throws Exception {
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("7|" + name + "|" + password + "|" + accn + "|" );
+		sb.append("7|" + name + "|" + password + "|" + accn + "|");
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 		printOutputString(receive);
 		String[] returnedArr = receive.split("\\|");
@@ -318,7 +318,7 @@ public class Client {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("1|" + name + "|" + currency + "|" + password + "|"
-				+ initalBalance + "|" );
+				+ initalBalance + "|");
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 
@@ -385,7 +385,7 @@ public class Client {
 
 	public static void printOutputString(String receive) {
 
-		if(lastResponse.equals(receive)){
+		if (lastResponse.equals(receive)) {
 			return;
 		}
 
@@ -432,11 +432,14 @@ public class Client {
 				System.out.println("Transferring amount");
 			}
 
-			//System.out.println("Balance remaining after transfer: "+ returnedArr[1]);
+			// System.out.println("Balance remaining after transfer: "+
+			// returnedArr[1]);
 			System.out.println("Name: " + returnedArr[1]);
 			System.out.println("Account Number: " + returnedArr[2]);
-			System.out.println("Balance remaining after transfer: " + returnedArr[4]);
-			System.out.println("Amount " + returnedArr[5] + " transferred to Account no. " + returnedArr[3]);
+			System.out.println("Balance remaining after transfer: "
+					+ returnedArr[4]);
+			System.out.println("Amount " + returnedArr[5]
+					+ " transferred to Account no. " + returnedArr[3]);
 			break;
 
 		case 7:
@@ -485,19 +488,19 @@ public class Client {
 	}
 
 	public static String getName() throws Exception {
-		String name = inFromUser.readLine();  
+		String name = inFromUser.readLine();
 		name = name.toLowerCase();
 
-    	StringBuffer res = new StringBuffer();
+		StringBuffer res = new StringBuffer();
 
-    	String[] strArr = name.split(" ");
-    	for (String str : strArr) {
-        	char[] stringArray = str.trim().toCharArray();
-        	stringArray[0] = Character.toUpperCase(stringArray[0]);
-        	str = new String(stringArray);
+		String[] strArr = name.split(" ");
+		for (String str : strArr) {
+			char[] stringArray = str.trim().toCharArray();
+			stringArray[0] = Character.toUpperCase(stringArray[0]);
+			str = new String(stringArray);
 
-        	res.append(str).append(" ");
-    	}
+			res.append(str).append(" ");
+		}
 
 		return res.toString();
 	}
@@ -524,14 +527,14 @@ public class Client {
 	public static int getValidTime() throws Exception {
 		int time = Integer.MAX_VALUE;
 		do {
-			try{
+			try {
 				time = Integer.parseInt(inFromUser.readLine());
-				if(time <= 0){
+				if (time <= 0) {
 					System.out.println("Time should be positive, Enter again");
 				}
-			}
-			catch (Exception e){
-				System.out.println("Time should be less than 10000 seconds, Enter again");
+			} catch (Exception e) {
+				System.out
+						.println("Time should be less than 10000 seconds, Enter again");
 			}
 		} while (time > 10000 || time <= 0);
 
@@ -541,11 +544,11 @@ public class Client {
 	public static double getValidAmount() throws Exception {
 		double amount = Double.MAX_VALUE;
 		do {
-			try{
+			try {
 				amount = Double.parseDouble(inFromUser.readLine());
-			}
-			catch (Exception e){
-				System.out.println("Enter a valid number, (Absolute value less than 1 million)");
+			} catch (Exception e) {
+				System.out
+						.println("Enter a valid number, (Absolute value less than 1 million)");
 			}
 		} while (Math.abs(amount) > 1000000);
 
@@ -555,10 +558,9 @@ public class Client {
 	public static int getValidAccountNumber() throws Exception {
 		int accn = Integer.MAX_VALUE;
 		do {
-			try{
+			try {
 				accn = Integer.parseInt(inFromUser.readLine());
-			}
-			catch (Exception e){
+			} catch (Exception e) {
 				System.out.println("Enter a valid Account Number");
 			}
 		} while (accn > 1000000);
