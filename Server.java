@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.charset.Charset;
 import java.util.*;
 
 
@@ -38,18 +39,18 @@ public class Server {
             // create account
             if(str.startsWith("1")){
                 int accNum = createAccount(str);
-                sendData = ("1|" + accNum + "").getBytes();
+                sendData = ("1|" + accNum + "|").getBytes(Charset.forName("UTF-8"));
             }
 
             //delete account
             if(str.startsWith("2")){
-                sendData = deleteAccount(str).getBytes();
+                sendData = deleteAccount(str).getBytes(Charset.forName("UTF-8"));
                 writeAccountsToFile();
             }
 
             //update account
             if(str.startsWith("3")){
-                sendData = updateAccount(str, IPAddress.toString(), port).getBytes();
+                sendData = updateAccount(str, IPAddress.toString(), port).getBytes(Charset.forName("UTF-8"));
                 writeAccountsToFile();
             }
 
@@ -59,7 +60,7 @@ public class Server {
                 flag = true;
                 flaggedIP = IPAddress;
                 flaggedPort = port;
-                sendData = ("4|Monitoring...").getBytes();
+                sendData = ("4|Monitoring...|").getBytes(Charset.forName("UTF-8"));
                 System.out.println("send data : monitoring");
                 sendDataPacket(serverSocket, sendData, flaggedIP, flaggedPort);
 
@@ -69,7 +70,7 @@ public class Server {
                     public void run(){
                         try{
                         flag = false;
-                        byte[] data = ("4|Stop monitoring...").getBytes();
+                        byte[] data = ("4|Stopped monitoring|").getBytes(Charset.forName("UTF-8"));
                         sendDataPacket(serverSocket, data, flaggedIP, flaggedPort);
                         } catch(final Exception e){
                            System.out.println(e.getStackTrace());
@@ -81,18 +82,18 @@ public class Server {
 
             //check balance
             if(str.startsWith("5")){
-                sendData = (checkBalance(Integer.parseInt(str.split("\\|")[1].trim()))).getBytes();
+                sendData = (checkBalance(Integer.parseInt(str.split("\\|")[1].trim()))).getBytes(Charset.forName("UTF-8"));
             }
 
             //fund transfer
             if(str.startsWith("6")){
-                sendData = fundTransfer(str, IPAddress.toString(), port).getBytes();
+                sendData = fundTransfer(str, IPAddress.toString(), port).getBytes(Charset.forName("UTF-8"));
                 writeAccountsToFile();
             }
 
             //validate user
             if(str.startsWith("7")){
-                sendData = validateUser(str).getBytes();
+                sendData = validateUser(str).getBytes(Charset.forName("UTF-8"));
             }
 
             if(flag == true){
@@ -118,24 +119,24 @@ public class Server {
             if(obj.accNumber == accountNum){
                 if(obj.name.equals(name)){
                     if(Arrays.equals(pwd, obj.password))
-                        return "7|Valid user";
+                        return "7|Valid user|";
                     else
-                        return "0|Incorrect password";
+                        return "0|Incorrect password|";
                 }else
-                   return "0|Incorrect user name for this account";
+                   return "0|Incorrect user name for this account|";
             }
         }
-        return "0|Account No. doesn't exist";
+        return "0|Account No. doesn't exist|";
     }
 
     public static String checkBalance(int accNum){
         for(Account obj : accArr){
             if(obj.accNumber == accNum){
                 System.out.println(obj.balance);
-                return "5|" + obj.name + "|" + obj.accNumber + "|" + obj.balance;
+                return "5|" + obj.name + "|" + obj.accNumber + "|" + obj.balance + "|";
             }
         }
-        return "0|Something went wrong while checking balance";
+        return "0|Something went wrong while checking balance|";
     }
 
     public static String deleteAccount(String str){
@@ -147,7 +148,7 @@ public class Server {
                 break;
             }
         }
-        return "2|"+accNum;
+        return "2|"+ accNum + "|";
     }
 
     public static String updateAccount(String str, String ipAdd, int port){
@@ -164,26 +165,26 @@ public class Server {
         for(Account obj : accArr){
             if(obj.accNumber == Integer.parseInt(elem[1])){
                 if(!elem[2].equals(obj.currency.name())){
-                    msg = "0|Currency mismatch";
+                    msg = "0|Currency mismatch|";
                     map.put(ipAdd+port, str+"||"+msg);
                     return msg;
                 }
                 double amt = Double.parseDouble(elem[3]);
                 if(amt<0){
                     if(obj.getBalance() < Math.abs(amt)){
-                        msg = "0|Not enough balance";
+                        msg = "0|Not enough balance|";
                         map.put(ipAdd+port, str+"||"+msg);
                         return msg;
                     }
                 }
                 double curBal = obj.getBalance()+amt;
                 obj.setBalance(curBal);
-                msg = "3|"+ obj.name + "|" + obj.accNumber + "|" + curBal;
+                msg = "3|"+ obj.name + "|" + obj.accNumber + "|" + curBal + "|";
                 map.put(ipAdd+port, str+"||"+msg);
                 return msg;
             }
         }
-        msg = "0|Something went wrong during balance update";
+        msg = "0|Something went wrong during balance update|";
         map.put(ipAdd+port, str+"||"+msg);
         return msg;
     }
@@ -203,14 +204,14 @@ public class Server {
         for(Account obj : accArr){
             if(obj.accNumber == Integer.parseInt(elem[5].trim())){
                 if(!elem[2].equals(obj.currency.name())){
-                    msg = "0|Different currency. Transfer not possible!";
+                    msg = "0|Different currency. Transfer not possible!|";
                     map.put(ipAdd+port, str+"||"+msg);
                     return msg;
                 }
                 double amt = Double.parseDouble(elem[3]);
 
                 if(Double.parseDouble(elem[4].trim()) < amt){
-                    msg = "0|Not enough balance";
+                    msg = "0|Not enough balance|";
                     map.put(ipAdd+port, str+"||"+msg);
                     return msg;
                 }
@@ -220,9 +221,9 @@ public class Server {
                 String receiver = updateBalance(Integer.parseInt(elem[5].trim()), amt);
 
                 Double curBal = Double.parseDouble(elem[4].trim()) - Double.parseDouble(elem[3].trim());
-//                String amtDisp = obj.currency.name() + curBal + "|" + obj.currency.name() + elem[3];
-//                msg = "6|"+ sender + "|" + elem[1] + "|" + elem[5] + "|" + amtDisp;
-                msg = "6|" + obj.currency.name()+ ". " + curBal;
+                String amtDisp = obj.currency.name() + curBal + "|" + obj.currency.name() + elem[3];
+                msg = "6|"+ sender + "|" + elem[1] + "|" + elem[5] + "|" + amtDisp + "|";
+                //msg = "6|" + obj.currency.name()+ ". " + curBal;
                 System.out.println(msg);
                 map.put(ipAdd+port, str+"||"+msg);
                 return msg;

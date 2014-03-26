@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.nio.charset.Charset;
 
 public class Client {
 
@@ -12,6 +13,7 @@ public class Client {
 	private static DatagramSocket clientSocket;
 	public static int timeoutVal;
 	public static boolean monitoring = false;
+	public static String lastResponse = "";
 
 	public static void main(String args[]) throws Exception {
 
@@ -49,7 +51,7 @@ public class Client {
 
 			case 1:
 				System.out.println("Enter your name");
-				name = inFromUser.readLine();
+				name = getName();
 
 				System.out.println("Enter the currency for your account");
 				currency = getValidCurrency();
@@ -58,30 +60,35 @@ public class Client {
 				password = getValidPassword();
 
 				System.out.println("Enter the initial balance in your account");
-				initialBalance = Double.parseDouble(inFromUser.readLine());
+				initialBalance = getValidAmount();
+
+				while(initialBalance < 0){
+					System.out.println("Balance cannot be negative, Enter a positive value");
+					initialBalance = getValidAmount();
+				}
 
 				createAccount(name, currency, password, initialBalance);
 				break;
 
 			case 2:
 				System.out.println("Enter your name");
-				name = inFromUser.readLine();
+				name = getName();
 
 				System.out.println("Enter your password");
 				password = getValidPassword();
 
-				System.out.println("Enter you account number");
-				accn = Integer.parseInt(inFromUser.readLine());
+				System.out.println("Enter your account number");
+				accn = getValidAccountNumber();
 
 				while (!isValidUserInput(name, password, accn)) {
 					System.out.println("Enter your name");
-					name = inFromUser.readLine();
+					name = getName();
 
 					System.out.println("Enter your password");
 					password = getValidPassword();
 
-					System.out.println("Enter you account number");
-					accn = Integer.parseInt(inFromUser.readLine());
+					System.out.println("Enter your account number");
+					accn = getValidAccountNumber();
 				}
 
 				closeAccount(accn);
@@ -89,28 +96,28 @@ public class Client {
 
 			case 3:
 				System.out.println("Enter your name");
-				name = inFromUser.readLine();
+				name = getName();
 
 				System.out.println("Enter your password");
 				password = getValidPassword();
 
-				System.out.println("Enter you account number");
-				accn = Integer.parseInt(inFromUser.readLine());
+				System.out.println("Enter your account number");
+				accn = getValidAccountNumber();
 
 				while (!isValidUserInput(name, password, accn)) {
 					System.out.println("Enter your name");
-					name = inFromUser.readLine();
+					name = getName();
 
 					System.out.println("Enter your password");
 					password = getValidPassword();
 
-					System.out.println("Enter you account number");
-					accn = Integer.parseInt(inFromUser.readLine());
+					System.out.println("Enter your account number");
+					accn = getValidAccountNumber();
 				}
 
 				System.out
 						.println("Enter the amount (Positive for deposit/Negative for withdrawal)");
-				amount = Double.parseDouble(inFromUser.readLine());
+				amount = getValidAmount();
 
 				System.out.println("Enter the currency for your account");
 				currency = getValidCurrency();
@@ -120,68 +127,70 @@ public class Client {
 
 			case 4:
 				System.out.println("Enter monitoring time in seconds");
-				int time = Integer.parseInt(inFromUser.readLine());
+				int time = getValidTime();
 				monitorUpdates(time);
 				break;
 
 			case 5:
 				System.out.println("Enter your name");
-				name = inFromUser.readLine();
+				name = getName();
 
 				System.out.println("Enter your password");
 				password = getValidPassword();
 
-				System.out.println("Enter you account number");
-				accn = Integer.parseInt(inFromUser.readLine());
+				System.out.println("Enter your account number");
+				accn = getValidAccountNumber();
 
 				while (!isValidUserInput(name, password, accn)) {
 					System.out.println("Enter your name");
-					name = inFromUser.readLine();
+					name = getName();
 
 					System.out.println("Enter your password");
 					password = getValidPassword();
 
-					System.out.println("Enter you account number");
-					accn = Integer.parseInt(inFromUser.readLine());
+					System.out.println("Enter your account number");
+					accn = getValidAccountNumber();
 				}
+
 				checkBalanceUser(accn);
 				break;
 
 			case 6:
 				System.out.println("Enter your name");
-				name = inFromUser.readLine();
+				name = getName();
 
 				System.out.println("Enter your password");
 				password = getValidPassword();
 
-				System.out.println("Enter you account number");
-				accn = Integer.parseInt(inFromUser.readLine());
+				System.out.println("Enter your account number");
+				accn = getValidAccountNumber();
 
 				while (!isValidUserInput(name, password, accn)) {
 					System.out.println("Enter your name");
-					name = inFromUser.readLine();
+					name = getName();
 
 					System.out.println("Enter your password");
 					password = getValidPassword();
 
-					System.out.println("Enter you account number");
-					accn = Integer.parseInt(inFromUser.readLine());
+					System.out.println("Enter your account number");
+					accn = getValidAccountNumber();
 				}
 
 				System.out.println("Enter the amount to be transferred");
-				amount = Double.parseDouble(inFromUser.readLine());
+				amount = getValidAmount();
 
 				System.out.println("Enter the currency for your account");
 				currency = getValidCurrency();
 
 				System.out.println("Transfer to which account number?");
-				Integer transferAccn = Integer.parseInt(inFromUser.readLine());
+				int transferAccn = getValidAccountNumber();
 
 				transferAmount(accn, amount, currency, transferAccn);
 				break;
 
 			case 0:
 				exit = true;
+				System.out.println("Bye!");
 				break;
 
 			default:
@@ -207,6 +216,13 @@ public class Client {
 			amount = Double.parseDouble(inFromUser.readLine());
 		}
 
+		while (transferAccn == accn) {
+			System.out
+					.println("You cannot tranfer to your own Account, Please enter a different Account No.");
+			transferAccn = Integer.parseInt(inFromUser.readLine());
+		}
+
+
 		if (currBalance == -1) {
 			System.out.println("Unexpected Error");
 			return;
@@ -214,7 +230,7 @@ public class Client {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("6|" + accn + "|" + currency + "|" + amount + "|"
-				+ currBalance + "|" + transferAccn);
+				+ currBalance + "|" + transferAccn+ "|" );
 
 		System.out.println(sb.toString());
 
@@ -234,7 +250,7 @@ public class Client {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("3|" + accn + "|" + currency + "|" + amount + "|"
-				+ currBalance);
+				+ currBalance + "|" );
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 		printOutputString(receive);
@@ -243,7 +259,7 @@ public class Client {
 
 	public static void closeAccount(int accn) throws Exception {
 		StringBuilder sb = new StringBuilder();
-		sb.append("2|" + accn);
+		sb.append("2|" + accn + "|" );
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 		printOutputString(receive);
@@ -253,7 +269,7 @@ public class Client {
 	public static void checkBalanceUser(int accn) throws Exception {
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("5|" + accn);
+		sb.append("5|" + accn + "|" );
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 		printOutputString(receive);
@@ -263,7 +279,7 @@ public class Client {
 	public static double checkBalanceState(int accn) throws Exception {
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("5|" + accn);
+		sb.append("5|" + accn + "|" );
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 
@@ -284,7 +300,7 @@ public class Client {
 			int accn) throws Exception {
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("7|" + name + "|" + password + "|" + accn);
+		sb.append("7|" + name + "|" + password + "|" + accn + "|" );
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 		printOutputString(receive);
 		String[] returnedArr = receive.split("\\|");
@@ -302,7 +318,7 @@ public class Client {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("1|" + name + "|" + currency + "|" + password + "|"
-				+ initalBalance);
+				+ initalBalance + "|" );
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 
@@ -369,6 +385,14 @@ public class Client {
 
 	public static void printOutputString(String receive) {
 
+		if(lastResponse.equals(receive)){
+			return;
+		}
+
+		lastResponse = receive;
+
+		System.out.println();
+
 		String[] returnedArr = receive.split("\\|");
 
 		int returnCode = Integer.parseInt(returnedArr[0]);
@@ -408,14 +432,11 @@ public class Client {
 				System.out.println("Transferring amount");
 			}
 
-			System.out.println("Balance remaining after transfer: "
-					+ returnedArr[1]);
-			// System.out.println("Name: " + returnedArr[1]);
-			// System.out.println("Account Number: " + returnedArr[2]);
-			// System.out.println("Balance remaining after transfer: " +
-			// returnedArr[4]);
-			// System.out.println("Amount " + returnedArr[5] +
-			// " transferred to Account no. " + returnedArr[3]);
+			//System.out.println("Balance remaining after transfer: "+ returnedArr[1]);
+			System.out.println("Name: " + returnedArr[1]);
+			System.out.println("Account Number: " + returnedArr[2]);
+			System.out.println("Balance remaining after transfer: " + returnedArr[4]);
+			System.out.println("Amount " + returnedArr[5] + " transferred to Account no. " + returnedArr[3]);
 			break;
 
 		case 7:
@@ -436,7 +457,7 @@ public class Client {
 
 	public static void sendData(String data) throws Exception {
 		byte[] sendData = new byte[2048];
-		sendData = data.getBytes();
+		sendData = data.getBytes(Charset.forName("UTF-8"));
 
 		// System.out.println(new String(sendData));
 		DatagramPacket sendPacket = new DatagramPacket(sendData,
@@ -454,13 +475,31 @@ public class Client {
 		 * portNumber = Integer.parseInt(inFromUser.readLine());
 		 */
 		clientSocket = new DatagramSocket();
-		IPAddress = InetAddress.getByName("172.22.73.79");
+		IPAddress = InetAddress.getByName("192.168.0.100");
 		portNumber = 2222;
 
 	}
 
 	public static void closeConnection() {
 		clientSocket.close();
+	}
+
+	public static String getName() throws Exception {
+		String name = inFromUser.readLine();  
+		name = name.toLowerCase();
+
+    	StringBuffer res = new StringBuffer();
+
+    	String[] strArr = name.split(" ");
+    	for (String str : strArr) {
+        	char[] stringArray = str.trim().toCharArray();
+        	stringArray[0] = Character.toUpperCase(stringArray[0]);
+        	str = new String(stringArray);
+
+        	res.append(str).append(" ");
+    	}
+
+		return res.toString();
 	}
 
 	public static String getValidPassword() throws Exception {
@@ -480,6 +519,51 @@ public class Client {
 		} while (!isValidCurrency(cur));
 
 		return cur;
+	}
+
+	public static int getValidTime() throws Exception {
+		int time = Integer.MAX_VALUE;
+		do {
+			try{
+				time = Integer.parseInt(inFromUser.readLine());
+				if(time <= 0){
+					System.out.println("Time should be positive, Enter again");
+				}
+			}
+			catch (Exception e){
+				System.out.println("Time should be less than 10000 seconds, Enter again");
+			}
+		} while (time > 10000 || time <= 0);
+
+		return time;
+	}
+
+	public static double getValidAmount() throws Exception {
+		double amount = Double.MAX_VALUE;
+		do {
+			try{
+				amount = Double.parseDouble(inFromUser.readLine());
+			}
+			catch (Exception e){
+				System.out.println("Enter a valid number, (Absolute value less than 1 million)");
+			}
+		} while (Math.abs(amount) > 1000000);
+
+		return amount;
+	}
+
+	public static int getValidAccountNumber() throws Exception {
+		int accn = Integer.MAX_VALUE;
+		do {
+			try{
+				accn = Integer.parseInt(inFromUser.readLine());
+			}
+			catch (Exception e){
+				System.out.println("Enter a valid Account Number");
+			}
+		} while (accn > 1000000);
+
+		return accn;
 	}
 
 	public static boolean isValidPassword(String password) {
