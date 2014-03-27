@@ -1,7 +1,14 @@
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.Charset;
+import java.util.HashSet;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Client {
 
@@ -232,7 +239,7 @@ public class Client {
 		sb.append("6|" + accn + "|" + currency + "|" + amount + "|"
 				+ currBalance + "|" + transferAccn + "|");
 
-		System.out.println(sb.toString());
+		// System.out.println(sb.toString());
 
 		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
 		printOutputString(receive);
@@ -336,16 +343,23 @@ public class Client {
 		long t = System.currentTimeMillis();
 		long end = t + time * 1000;
 
-		// when monitoring, we don't want the system to timeout if no operation
-		// is performed
 		monitoring = true;
+		clientSocket.setSoTimeout(time * 1000);
 
-		clientSocket.setSoTimeout((time + 1) * 1000);
 		while (System.currentTimeMillis() < end) {
-			receive = receiveData();
-			printOutputString(receive);
-		}
+			try {
+				receive = receiveData();
+				printOutputString(receive);
+				long remainingTime = end - System.currentTimeMillis();
+				//System.out.println((int) remainingTime);
+				//updating time left
+				clientSocket.setSoTimeout((int) remainingTime);
+			} catch (SocketTimeoutException e) {
+				System.out.println("Stopped monitoring");
+				break;
+			}
 
+		}
 		monitoring = false;
 	}
 
@@ -361,7 +375,8 @@ public class Client {
 				receive = receiveData();
 				break;
 			} catch (SocketTimeoutException e) {
-				System.out.println("Timeout!");
+				System.out
+						.println("Timeout! No reply from server. Trying again..");
 				continue;
 			}
 		}
@@ -399,8 +414,7 @@ public class Client {
 
 		switch (returnCode) {
 		case 1:
-			if (monitoring)
-				System.out.println("Account " + returnedArr[1] + " created");
+			System.out.println("Account " + returnedArr[1] + " created");
 			break;
 
 		case 2:
@@ -414,7 +428,9 @@ public class Client {
 			break;
 
 		case 4:
-			System.out.println(returnedArr[1]);
+			if (!monitoring) {
+				System.out.println(returnedArr[1]);
+			}
 			break;
 
 		case 5:
@@ -478,7 +494,7 @@ public class Client {
 		 * portNumber = Integer.parseInt(inFromUser.readLine());
 		 */
 		clientSocket = new DatagramSocket();
-		IPAddress = InetAddress.getByName("192.168.0.100");
+		IPAddress = InetAddress.getByName("192.168.0.13");
 		portNumber = 2222;
 
 	}
@@ -489,6 +505,12 @@ public class Client {
 
 	public static String getName() throws Exception {
 		String name = inFromUser.readLine();
+		while (name.contains("|")) {
+			System.out
+					.println("Cannot use the '|' symbol in Name, Enter again");
+			name = inFromUser.readLine();
+		}
+
 		name = name.toLowerCase();
 
 		StringBuffer res = new StringBuffer();
@@ -499,7 +521,7 @@ public class Client {
 			stringArray[0] = Character.toUpperCase(stringArray[0]);
 			str = new String(stringArray);
 
-			res.append(str).append(" ");
+			res.append(str);
 		}
 
 		return res.toString();
@@ -570,8 +592,9 @@ public class Client {
 
 	public static boolean isValidPassword(String password) {
 
-		if (password.length() != 8) {
-			System.out.println("Invalid password! Enter an 8 letter password");
+		if (password.length() != 8 || password.contains("|")) {
+			System.out.println("Invalid password! Enter an 8 letter password "
+					+ "(Cannot contain the '|'symbol)");
 			return false;
 		}
 

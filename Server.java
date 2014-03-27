@@ -4,6 +4,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.Map.Entry;
 
 public class Server {
 
@@ -59,7 +60,10 @@ public class Server {
 			// add all monitoring clients to the monitorMap
 			if (str.startsWith("4")) {
 				duration = Long.parseLong(str.split("\\|")[1]) * 1000;
-				monitorMap.put(IPAddress.toString()+"|"+port, System.currentTimeMillis()+duration);
+				monitorMap.put(IPAddress.toString().split("\\/")[1] + "|"
+						+ port, System.currentTimeMillis() + duration);
+				sendData = ("4|Monitoring|").getBytes(Charset.forName("UTF-8"));
+
 			}
 
 			// check balance
@@ -83,18 +87,20 @@ public class Server {
 			// Send response to the client request
 			sendDataPacket(serverSocket, sendData, IPAddress, port);
 
-			// Iterate through all monitoring clients, send data, and remove the ones timed-out
-			Iterator it = monitorMap.entrySet().iterator();
-		    while (it.hasNext()) {
-		        Map.Entry pairs = (Map.Entry)it.next();		       
-		        if(System.currentTimeMillis() <= pairs.getValue()){
-		        	InetAddress IP = InetAddress.getByName(pairs.getKey().split("\\|")[0]);
-		        	int po = Integer.parseInt(pairs.getKey().split("\\|")[1]);
-		        	sendDataPacket(serverSocket, sendData, IP, po);
-		        }
-		        else
-		        	it.remove();
-		    }			
+			// Iterate through all monitoring clients, send data, and remove the
+			// ones timed-out
+			Iterator<Entry<String, Long>> it = monitorMap.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry<String, Long> pairs = (Map.Entry<String, Long>) it
+						.next();
+				if (System.currentTimeMillis() <= pairs.getValue()) {
+					InetAddress IP = InetAddress.getByName(pairs.getKey()
+							.split("\\|")[0]);
+					int po = Integer.parseInt(pairs.getKey().split("\\|")[1]);
+					sendDataPacket(serverSocket, sendData, IP, po);
+				} else
+					it.remove();
+			}
 		}
 	}
 
@@ -103,6 +109,7 @@ public class Server {
 		// Thread.sleep(10000);
 		DatagramPacket sendPacket = new DatagramPacket(sendData,
 				sendData.length, IPAddress, port);
+		System.out.println(new String(sendData) + " ''' " + IPAddress + " '' " + port);
 		serverSocket.send(sendPacket);
 	}
 
@@ -227,7 +234,7 @@ public class Server {
 				msg = "6|" + sender + "|" + elem[1] + "|" + elem[5] + "|"
 						+ amtDisp + "|";
 				// msg = "6|" + obj.currency.name()+ ". " + curBal;
-				System.out.println(msg);
+				// System.out.println(msg);
 				map.put(ipAdd + port, str + "||" + msg);
 				return msg;
 			}
@@ -249,12 +256,13 @@ public class Server {
 	}
 
 	public static int createAccount(String str) throws IOException {
-		System.out.println(str);
+		// System.out.println(str);
 		String[] elem = str.split("\\|");
 		String name = elem[1];
 		String cur = elem[2];
 		char[] pwd = elem[3].toCharArray();
-		System.out.println(elem[1] + ":" + elem[2] + ":" + elem[3] + ":" + elem[4]);
+		// System.out.println(elem[1] + ":" + elem[2] + ":" + elem[3] + ":" +
+		// elem[4]);
 		double initialAmt = Double.parseDouble(elem[4]);
 		int accNum = ++lastAccNum;
 		appendAccNum(accNum);
@@ -284,7 +292,12 @@ public class Server {
 	}
 
 	public static void readAccountNumFile() throws IOException {
+		// create file if it doesn't exist
 		File file = new File("AccNum");
+		if (!file.exists()) {
+			file.createNewFile();
+		}
+
 		BufferedReader br = new BufferedReader(new InputStreamReader(
 				new FileInputStream(file)));
 		String line;
@@ -296,7 +309,12 @@ public class Server {
 	}
 
 	public static void loadAccountObjects() throws IOException {
+		// create file if it doesn't exist
 		File file = new File("AccountObjects");
+		if (!file.exists()) {
+			file.createNewFile();
+		}
+
 		BufferedReader br = new BufferedReader(new InputStreamReader(
 				new FileInputStream(file)));
 		String line;
