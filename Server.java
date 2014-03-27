@@ -14,6 +14,7 @@ public class Server {
 	static InetAddress flaggedIP;
 	static int flaggedPort;
 	static HashMap<String, String> map = new HashMap<String, String>();
+	static HashMap<String, Long> monitorMap = new HashMap<String, Long>();
 
 	public static void main(String args[]) throws Exception {
 		readAccountNumFile();
@@ -55,33 +56,10 @@ public class Server {
 				writeAccountsToFile();
 			}
 
-			// monitor all accounts
+			// add all monitoring clients to the monitorMap
 			if (str.startsWith("4")) {
 				duration = Long.parseLong(str.split("\\|")[1]) * 1000;
-				flag = true;
-				flaggedIP = IPAddress;
-				flaggedPort = port;
-				sendData = ("4|Monitoring...|").getBytes(Charset
-						.forName("UTF-8"));
-				System.out.println("send data : monitoring");
-				sendDataPacket(serverSocket, sendData, flaggedIP, flaggedPort);
-
-				// timeout logic
-				timer.schedule(new TimerTask() {
-					@Override
-					public void run() {
-						try {
-							flag = false;
-							byte[] data = ("4|Stopped monitoring|")
-									.getBytes(Charset.forName("UTF-8"));
-							sendDataPacket(serverSocket, data, flaggedIP,
-									flaggedPort);
-						} catch (final Exception e) {
-							System.out.println(e.getStackTrace());
-						}
-					}
-				}, duration);
-				continue;
+				monitorMap.put(IPAddress.toString()+"|"+port, System.currentTimeMillis()+duration);
 			}
 
 			// check balance
@@ -102,10 +80,21 @@ public class Server {
 				sendData = validateUser(str).getBytes(Charset.forName("UTF-8"));
 			}
 
-			if (flag == true) {
-				sendDataPacket(serverSocket, sendData, flaggedIP, flaggedPort);
-			}
+			// Send response to the client request
 			sendDataPacket(serverSocket, sendData, IPAddress, port);
+
+			// Iterate through all monitoring clients, send data, and remove the ones timed-out
+			Iterator it = monitorMap.entrySet().iterator();
+		    while (it.hasNext()) {
+		        Map.Entry pairs = (Map.Entry)it.next();		       
+		        if(System.currentTimeMillis() <= pairs.getValue()){
+		        	InetAddress IP = InetAddress.getByName(pairs.getKey().split("\\|")[0]);
+		        	int po = Integer.parseInt(pairs.getKey().split("\\|")[1]);
+		        	sendDataPacket(serverSocket, sendData, IP, po);
+		        }
+		        else
+		        	it.remove();
+		    }			
 		}
 	}
 
@@ -265,8 +254,7 @@ public class Server {
 		String name = elem[1];
 		String cur = elem[2];
 		char[] pwd = elem[3].toCharArray();
-		System.out.println(elem[1] + ":" + elem[2] + ":" + elem[3] + ":"
-				+ elem[4]);
+		System.out.println(elem[1] + ":" + elem[2] + ":" + elem[3] + ":" + elem[4]);
 		double initialAmt = Double.parseDouble(elem[4]);
 		int accNum = ++lastAccNum;
 		appendAccNum(accNum);
