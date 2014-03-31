@@ -79,50 +79,12 @@ public class Client {
 				break;
 
 			case 2:
-				System.out.println("Enter your name");
-				name = getName();
-
-				System.out.println("Enter your password");
-				password = getValidPassword();
-
-				System.out.println("Enter your account number");
-				accn = getValidAccountNumber();
-
-				while (!isValidUserInput(name, password, accn)) {
-					System.out.println("Enter your name");
-					name = getName();
-
-					System.out.println("Enter your password");
-					password = getValidPassword();
-
-					System.out.println("Enter your account number");
-					accn = getValidAccountNumber();
-				}
-
+				accn = verifyUser();
 				closeAccount(accn);
 				break;
 
 			case 3:
-				System.out.println("Enter your name");
-				name = getName();
-
-				System.out.println("Enter your password");
-				password = getValidPassword();
-
-				System.out.println("Enter your account number");
-				accn = getValidAccountNumber();
-
-				while (!isValidUserInput(name, password, accn)) {
-					System.out.println("Enter your name");
-					name = getName();
-
-					System.out.println("Enter your password");
-					password = getValidPassword();
-
-					System.out.println("Enter your account number");
-					accn = getValidAccountNumber();
-				}
-
+				accn = verifyUser();
 				System.out
 						.println("Enter the amount (Positive for deposit/Negative for withdrawal)");
 				amount = getValidAmount();
@@ -140,50 +102,12 @@ public class Client {
 				break;
 
 			case 5:
-				System.out.println("Enter your name");
-				name = getName();
-
-				System.out.println("Enter your password");
-				password = getValidPassword();
-
-				System.out.println("Enter your account number");
-				accn = getValidAccountNumber();
-
-				while (!isValidUserInput(name, password, accn)) {
-					System.out.println("Enter your name");
-					name = getName();
-
-					System.out.println("Enter your password");
-					password = getValidPassword();
-
-					System.out.println("Enter your account number");
-					accn = getValidAccountNumber();
-				}
-
+				accn = verifyUser();
 				checkBalanceUser(accn);
 				break;
 
 			case 6:
-				System.out.println("Enter your name");
-				name = getName();
-
-				System.out.println("Enter your password");
-				password = getValidPassword();
-
-				System.out.println("Enter your account number");
-				accn = getValidAccountNumber();
-
-				while (!isValidUserInput(name, password, accn)) {
-					System.out.println("Enter your name");
-					name = getName();
-
-					System.out.println("Enter your password");
-					password = getValidPassword();
-
-					System.out.println("Enter your account number");
-					accn = getValidAccountNumber();
-				}
-
+				accn = verifyUser();
 				System.out.println("Enter the amount to be transferred");
 				amount = getValidAmount();
 
@@ -486,21 +410,45 @@ public class Client {
 
 	public static void openConnection() throws Exception {
 		// Assuming valid input
-		/*
-		 * System.out.println("Please enter IP address of server"); String IP =
-		 * inFromUser.readLine(); IPAddress = InetAddress.getByName(IP);
-		 * 
-		 * System.out.println("Please enter port number used by server");
-		 * portNumber = Integer.parseInt(inFromUser.readLine());
-		 */
+		
+		System.out.println("Please enter IP address of server"); String IP =
+		inFromUser.readLine(); IPAddress = InetAddress.getByName(IP);
+		  
+		System.out.println("Please enter port number used by server");
+		portNumber = Integer.parseInt(inFromUser.readLine());
+		
 		clientSocket = new DatagramSocket();
-		IPAddress = InetAddress.getByName("192.168.0.13");
-		portNumber = 2222;
+		//IPAddress = InetAddress.getByName("192.168.0.13");
+		//portNumber = 2222;
 
 	}
 
 	public static void closeConnection() {
 		clientSocket.close();
+	}
+
+	public static int  verifyUser() throws Exception{
+		System.out.println("Enter your name");
+		String name = getName();
+
+		System.out.println("Enter your password");
+		String password = getValidPassword();
+
+		System.out.println("Enter your account number");
+		int accn = getValidAccountNumber();
+
+		while (!isValidUserInput(name, password, accn)) {
+			System.out.println("Enter your name");
+			name = getName();
+
+			System.out.println("Enter your password");
+			password = getValidPassword();
+
+			System.out.println("Enter your account number");
+			accn = getValidAccountNumber();
+		}
+
+		return accn;
 	}
 
 	public static String getName() throws Exception {
