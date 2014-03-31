@@ -108,7 +108,6 @@ public class Server {
 		// Thread.sleep(10000);
 		DatagramPacket sendPacket = new DatagramPacket(sendData,
 				sendData.length, IPAddress, port);
-		System.out.println(new String(sendData) + " ''' " + IPAddress + " '' " + port);
 		serverSocket.send(sendPacket);
 	}
 
@@ -254,7 +253,7 @@ public class Server {
 		return "";
 	}
 
-	public static int createAccount(String str, String ipAdd, int port) throws IOException {
+	public static String createAccount(String str, String ipAdd, int port) throws IOException {
 		if (map.get(ipAdd + port) != null) {
 			String[] arr = map.get(ipAdd + port).split("\\|\\|");
 			if (arr[0].equals(str)) {
