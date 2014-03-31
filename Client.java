@@ -35,6 +35,7 @@ public class Client {
 		int choice;
 		boolean exit = false;
 
+		//prints menu and asks user for input
 		do {
 
 			System.out.println("1. Open Bank account");
@@ -61,6 +62,8 @@ public class Client {
 				name = getName();
 
 				System.out.println("Enter the currency for your account");
+				System.out.println("Choose one from the following: "+ validCurrency.toString());
+
 				currency = getValidCurrency();
 
 				System.out.println("Enter an 8 letter password");
@@ -90,6 +93,7 @@ public class Client {
 				amount = getValidAmount();
 
 				System.out.println("Enter the currency for your account");
+				System.out.println("Choose one from the following: "+ validCurrency.toString());
 				currency = getValidCurrency();
 
 				updateBalance(accn, amount, currency);
@@ -112,6 +116,7 @@ public class Client {
 				amount = getValidAmount();
 
 				System.out.println("Enter the currency for your account");
+				System.out.println("Choose one from the following: "+ validCurrency.toString());
 				currency = getValidCurrency();
 
 				System.out.println("Transfer to which account number?");
@@ -137,6 +142,115 @@ public class Client {
 
 	}
 
+	//sends the user input to create account to server and prints reply message
+	public static void createAccount(String name, String currency,
+			String password, double initalBalance) throws Exception {
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("1|" + name + "|" + currency + "|" + password + "|"
+				+ initalBalance + "|");
+
+		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
+
+		printOutputString(receive);
+	}
+
+	//requests server to close account with account number specified
+	public static void closeAccount(int accn) throws Exception {
+		StringBuilder sb = new StringBuilder();
+		sb.append("2|" + accn + "|");
+
+		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
+		printOutputString(receive);
+
+	}
+
+	//sends a request to server to update balance in account by amount entered
+	public static void updateBalance(int accn, double amount, String currency)
+			throws Exception {
+
+		double currBalance = checkBalanceState(accn);
+
+		if (currBalance == -1) {
+			System.out.println("Unexpected Error");
+			return;
+		}
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("3|" + accn + "|" + currency + "|" + amount + "|"
+				+ currBalance + "|");
+
+		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
+		printOutputString(receive);
+
+	}	
+
+	//sends message to server to monitor updates of accounts for the time entered
+	public static void monitorUpdates(int time) throws Exception {
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("4|" + time + "|");
+
+		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
+		printOutputString(receive);
+
+		long t = System.currentTimeMillis();
+		long end = t + time * 1000;
+
+		monitoring = true;
+		clientSocket.setSoTimeout(time * 1000);
+
+		while (System.currentTimeMillis() < end) {
+			try {
+				receive = receiveData();
+				printOutputString(receive);
+				long remainingTime = end - System.currentTimeMillis();
+				//System.out.println((int) remainingTime);
+				//updating time left
+				clientSocket.setSoTimeout((int) remainingTime);
+			} catch (SocketTimeoutException e) {
+				System.out.println("Stopped monitoring");
+				break;
+			}
+
+		}
+		monitoring = false;
+	}
+
+	// Checks balance for account specified by user nad displays the received result
+	public static void checkBalanceUser(int accn) throws Exception {
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("5|" + accn + "|");
+
+		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
+		printOutputString(receive);
+
+	}	
+
+	//this method is used to maintain state for non-idempotent functions such as transfer funds
+	// this does not print the balance only sends to server as the current state
+	public static double checkBalanceState(int accn) throws Exception {
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("5|" + accn + "|");
+
+		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
+
+		String[] returnedArr = receive.split("\\|");
+
+		Integer returnCode = Integer.parseInt(returnedArr[0]);
+
+		if (returnCode == 5) {
+			return Double.parseDouble(returnedArr[3]);
+		}
+
+		else {
+			return -1;
+		}
+	}
+
+	// performs errorc checks and sends a request to server to transfer amount to specified account
 	public static void transferAmount(int accn, double amount, String currency,
 			int transferAccn) throws Exception {
 
@@ -169,124 +283,35 @@ public class Client {
 		printOutputString(receive);
 	}
 
-	public static void updateBalance(int accn, double amount, String currency)
-			throws Exception {
+	// sends the String data to server by converting to bytes
+	public static void sendData(String data) throws Exception {
+		byte[] sendData = new byte[2048];
+		sendData = data.getBytes(Charset.forName("UTF-8"));
 
-		double currBalance = checkBalanceState(accn);
+		// System.out.println(new String(sendData));
+		DatagramPacket sendPacket = new DatagramPacket(sendData,
+				sendData.length, IPAddress, portNumber);
+		clientSocket.send(sendPacket);
+	}
 
-		if (currBalance == -1) {
-			System.out.println("Unexpected Error");
-			return;
-		}
 
-		StringBuilder sb = new StringBuilder();
-		sb.append("3|" + accn + "|" + currency + "|" + amount + "|"
-				+ currBalance + "|");
+	//receives the data from server in bytes anc converts to string
+	public static String receiveData() throws Exception {
 
-		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
-		printOutputString(receive);
+		byte[] receiveData = new byte[2048];
+		DatagramPacket receivePacket = new DatagramPacket(receiveData,
+				receiveData.length);
+
+		clientSocket.receive(receivePacket);
+
+		String receive = new String(receivePacket.getData());
+
+		return receive;
 
 	}
 
-	public static void closeAccount(int accn) throws Exception {
-		StringBuilder sb = new StringBuilder();
-		sb.append("2|" + accn + "|");
-
-		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
-		printOutputString(receive);
-
-	}
-
-	public static void checkBalanceUser(int accn) throws Exception {
-
-		StringBuilder sb = new StringBuilder();
-		sb.append("5|" + accn + "|");
-
-		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
-		printOutputString(receive);
-
-	}
-
-	public static double checkBalanceState(int accn) throws Exception {
-
-		StringBuilder sb = new StringBuilder();
-		sb.append("5|" + accn + "|");
-
-		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
-
-		String[] returnedArr = receive.split("\\|");
-
-		Integer returnCode = Integer.parseInt(returnedArr[0]);
-
-		if (returnCode == 5) {
-			return Double.parseDouble(returnedArr[3]);
-		}
-
-		else {
-			return -1;
-		}
-	}
-
-	public static boolean isValidUserInput(String name, String password,
-			int accn) throws Exception {
-
-		StringBuilder sb = new StringBuilder();
-		sb.append("7|" + name + "|" + password + "|" + accn + "|");
-		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
-		printOutputString(receive);
-		String[] returnedArr = receive.split("\\|");
-		int returnCode = Integer.parseInt(returnedArr[0]);
-		if (returnCode != 7) {
-			return false;
-		} else {
-			return true;
-		}
-
-	}
-
-	public static void createAccount(String name, String currency,
-			String password, double initalBalance) throws Exception {
-
-		StringBuilder sb = new StringBuilder();
-		sb.append("1|" + name + "|" + currency + "|" + password + "|"
-				+ initalBalance + "|");
-
-		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
-
-		printOutputString(receive);
-	}
-
-	public static void monitorUpdates(int time) throws Exception {
-
-		StringBuilder sb = new StringBuilder();
-		sb.append("4|" + time + "|");
-
-		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
-		printOutputString(receive);
-
-		long t = System.currentTimeMillis();
-		long end = t + time * 1000;
-
-		monitoring = true;
-		clientSocket.setSoTimeout(time * 1000);
-
-		while (System.currentTimeMillis() < end) {
-			try {
-				receive = receiveData();
-				printOutputString(receive);
-				long remainingTime = end - System.currentTimeMillis();
-				//System.out.println((int) remainingTime);
-				//updating time left
-				clientSocket.setSoTimeout((int) remainingTime);
-			} catch (SocketTimeoutException e) {
-				System.out.println("Stopped monitoring");
-				break;
-			}
-
-		}
-		monitoring = false;
-	}
-
+	//methods which ensures the at-least once semantics
+	//sends the data until reply is received if timeout occurs
 	public static String sendAndReceiveWithTimeout(String data, int timeout)
 			throws Exception {
 		clientSocket.setSoTimeout(timeout * 1000);
@@ -308,20 +333,7 @@ public class Client {
 		return receive;
 	}
 
-	public static String receiveData() throws Exception {
-
-		byte[] receiveData = new byte[2048];
-		DatagramPacket receivePacket = new DatagramPacket(receiveData,
-				receiveData.length);
-
-		clientSocket.receive(receivePacket);
-
-		String receive = new String(receivePacket.getData());
-
-		return receive;
-
-	}
-
+	//formats and prints the responses received from the server
 	public static void printOutputString(String receive) {
 
 		if (lastResponse.equals(receive)) {
@@ -398,16 +410,7 @@ public class Client {
 		System.out.println();
 	}
 
-	public static void sendData(String data) throws Exception {
-		byte[] sendData = new byte[2048];
-		sendData = data.getBytes(Charset.forName("UTF-8"));
-
-		// System.out.println(new String(sendData));
-		DatagramPacket sendPacket = new DatagramPacket(sendData,
-				sendData.length, IPAddress, portNumber);
-		clientSocket.send(sendPacket);
-	}
-
+	//opens connection of client and initializes IP and port or server
 	public static void openConnection() throws Exception {
 		// Assuming valid input
 		
@@ -427,6 +430,8 @@ public class Client {
 		clientSocket.close();
 	}
 
+	//gets the input for verification from user and returns the account number
+	// account number is used to call the banks functions
 	public static int  verifyUser() throws Exception{
 		System.out.println("Enter your name");
 		String name = getName();
@@ -451,6 +456,7 @@ public class Client {
 		return accn;
 	}
 
+	//gets name of user and checks for validity
 	public static String getName() throws Exception {
 		String name = inFromUser.readLine();
 		while (name.contains("|")) {
@@ -475,6 +481,7 @@ public class Client {
 		return res.toString();
 	}
 
+	// get password from user and checks it
 	public static String getValidPassword() throws Exception {
 		String pass = null;
 		do {
@@ -484,6 +491,7 @@ public class Client {
 		return pass;
 	}
 
+	// get currency from user and checks it
 	public static String getValidCurrency() throws Exception {
 		String cur = null;
 		do {
@@ -494,6 +502,7 @@ public class Client {
 		return cur;
 	}
 
+	// ensures time entered is valid
 	public static int getValidTime() throws Exception {
 		int time = Integer.MAX_VALUE;
 		do {
@@ -511,6 +520,7 @@ public class Client {
 		return time;
 	}
 
+	// ensures amount entered is valid
 	public static double getValidAmount() throws Exception {
 		double amount = Double.MAX_VALUE;
 		do {
@@ -525,6 +535,7 @@ public class Client {
 		return amount;
 	}
 
+	// ensures account number entered is valid
 	public static int getValidAccountNumber() throws Exception {
 		int accn = Integer.MAX_VALUE;
 		do {
@@ -538,6 +549,25 @@ public class Client {
 		return accn;
 	}
 
+	//checks whether the user credentials are valid to access data in account
+	public static boolean isValidUserInput(String name, String password,
+			int accn) throws Exception {
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("7|" + name + "|" + password + "|" + accn + "|");
+		String receive = sendAndReceiveWithTimeout(sb.toString(), timeoutVal);
+		printOutputString(receive);
+		String[] returnedArr = receive.split("\\|");
+		int returnCode = Integer.parseInt(returnedArr[0]);
+		if (returnCode != 7) {
+			return false;
+		} else {
+			return true;
+		}
+
+	}
+
+	// ensures password entered is valid
 	public static boolean isValidPassword(String password) {
 
 		if (password.length() != 8 || password.contains("|")) {
@@ -549,6 +579,7 @@ public class Client {
 		return true;
 	}
 
+	// ensures currency entered is valid
 	public static boolean isValidCurrency(String currency) {
 
 		if (!validCurrency.contains(currency)) {
