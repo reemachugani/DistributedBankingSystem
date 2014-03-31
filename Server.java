@@ -38,9 +38,8 @@ public class Server {
 
 			// create account
 			if (str.startsWith("1")) {
-				int accNum = createAccount(str);
-				sendData = ("1|" + accNum + "|").getBytes(Charset
-						.forName("UTF-8"));
+				sendData = createAccount(str, IPAddress.toString(), port)
+						.getBytes(Charset.forName("UTF-8"));
 			}
 
 			// delete account
@@ -255,14 +254,18 @@ public class Server {
 		return "";
 	}
 
-	public static int createAccount(String str) throws IOException {
-		// System.out.println(str);
+	public static int createAccount(String str, String ipAdd, int port) throws IOException {
+		if (map.get(ipAdd + port) != null) {
+			String[] arr = map.get(ipAdd + port).split("\\|\\|");
+			if (arr[0].equals(str)) {
+				System.out.println("executed before");
+				return arr[1];
+			}
+		}
 		String[] elem = str.split("\\|");
 		String name = elem[1];
 		String cur = elem[2];
 		char[] pwd = elem[3].toCharArray();
-		// System.out.println(elem[1] + ":" + elem[2] + ":" + elem[3] + ":" +
-		// elem[4]);
 		double initialAmt = Double.parseDouble(elem[4]);
 		int accNum = ++lastAccNum;
 		appendAccNum(accNum);
@@ -270,7 +273,9 @@ public class Server {
 		appendAccountObj(obj);
 		accArr.add(obj);
 		System.out.println(accNum);
-		return accNum;
+		String msg = "1|" + accNum + "|";
+		map.put(ipAdd + port, str + "||" + msg);
+		return msg;
 	}
 
 	public static void appendAccNum(int accNum) throws IOException {
