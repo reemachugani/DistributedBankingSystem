@@ -103,6 +103,7 @@ public class Server {
 		}
 	}
 
+	// sends the data packets to the clients
 	public static void sendDataPacket(DatagramSocket serverSocket,
 			byte[] sendData, InetAddress IPAddress, int port) throws Exception {
 		// Thread.sleep(10000);
@@ -111,6 +112,7 @@ public class Server {
 		serverSocket.send(sendPacket);
 	}
 
+	// validates user's account information before updating the account
 	public static String validateUser(String str) {
 		String[] elem = str.split("\\|");
 		String name = elem[1].trim();
@@ -131,6 +133,7 @@ public class Server {
 		return "0|Account No. doesn't exist|";
 	}
 
+	// checks account balance before executing transactions
 	public static String checkBalance(int accNum) {
 		for (Account obj : accArr) {
 			if (obj.accNumber == accNum) {
@@ -142,6 +145,7 @@ public class Server {
 		return "0|Something went wrong while checking balance|";
 	}
 
+	// delete user account
 	public static String deleteAccount(String str) {
 		int accNum = Integer.parseInt(str.split("\\|")[1].trim());
 		boolean del = false;
@@ -154,6 +158,8 @@ public class Server {
 		return "2|" + accNum + "|";
 	}
 
+	// update user account based on the amount deposited or withdrawn
+	// stores the request message to the history for fault tolerance
 	public static String updateAccount(String str, String ipAdd, int port) {
 		if (map.get(ipAdd + port) != null) {
 			String[] arr = map.get(ipAdd + port).split("\\|\\|");
@@ -193,6 +199,8 @@ public class Server {
 		return msg;
 	}
 
+	// transfers funds from one account to another after checking balance for both
+	// stores the request message to the history for fault tolerance
 	public static String fundTransfer(String str, String ipAdd, int port) {
 		// accNum, curr, amt, curBal, transferAccNum
 		if (map.get(ipAdd + port) != null) {
@@ -242,6 +250,7 @@ public class Server {
 		return msg;
 	}
 
+	// helper method to add or subtract from a given account
 	public static String updateBalance(int accNum, double amount) {
 		for (Account obj : accArr) {
 			if (obj.accNumber == accNum) {
@@ -253,6 +262,8 @@ public class Server {
 		return "";
 	}
 
+	// creates a new account based on given information
+	// stores the request message to the history for fault tolerance
 	public static String createAccount(String str, String ipAdd, int port) throws IOException {
 		if (map.get(ipAdd + port) != null) {
 			String[] arr = map.get(ipAdd + port).split("\\|\\|");
@@ -277,6 +288,7 @@ public class Server {
 		return msg;
 	}
 
+	// appends the currently assigned account number to the "AccNum" file
 	public static void appendAccNum(int accNum) throws IOException {
 		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(
 				"AccNum", true)));
@@ -284,6 +296,7 @@ public class Server {
 		out.close();
 	}
 
+	// appends the account created to the "AccountsObjects" file
 	public static void appendAccountObj(Account obj) throws IOException {
 		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(
 				"AccountObjects", true)));
@@ -295,6 +308,7 @@ public class Server {
 		out.close();
 	}
 
+	// reads account numbers from the file to track the last assigned account number
 	public static void readAccountNumFile() throws IOException {
 		// create file if it doesn't exist
 		File file = new File("AccNum");
@@ -312,6 +326,7 @@ public class Server {
 		br.close();
 	}
 
+	// raeds the account objects into memory from the "AccountObjects" file
 	public static void loadAccountObjects() throws IOException {
 		// create file if it doesn't exist
 		File file = new File("AccountObjects");
@@ -333,6 +348,7 @@ public class Server {
 		br.close();
 	}
 
+	// writes all the updated account objects to the file
 	public static void writeAccountsToFile() throws IOException {
 		PrintWriter writer = new PrintWriter("AccountObjects");
 		for (Account obj : accArr) {
