@@ -475,10 +475,10 @@ public class Client {
 			stringArray[0] = Character.toUpperCase(stringArray[0]);
 			str = new String(stringArray);
 
-			res.append(str);
+			res.append(str + " ");
 		}
 
-		return res.toString();
+		return res.toString().trim();
 	}
 
 	// get password from user and checks it
